@@ -1,4 +1,4 @@
-import { state, colorHash, assets, allCTX, allCanvas, ITEM_SCALE } from './index.js';
+import { state, colorHash, assets, allCanvas, ITEM_SCALE } from './index.js';
 
 export function draw() {
     if (state != "active") {
@@ -7,13 +7,14 @@ export function draw() {
 
     const color = colorHash;
 
-    _drawPiece(allCanvas.h, allCTX.h, "helmet", color);
-    _drawPiece(allCanvas.c, allCTX.c, "chestplate", color);
-    _drawPiece(allCanvas.l, allCTX.l, "leggings", color);
-    _drawPiece(allCanvas.b, allCTX.b, "boots", color);
+    _drawPiece(allCanvas.$h, "helmet", color);
+    _drawPiece(allCanvas.$c, "chestplate", color);
+    _drawPiece(allCanvas.$l, "leggings", color);
+    _drawPiece(allCanvas.$b, "boots", color);
 }
 
-function _drawPiece(canvas, ctx, name, color) {
+function _drawPiece(canvas, name, color) {
+    let $canvas = $(canvas)
     let {
         file,
         x,
@@ -31,28 +32,34 @@ function _drawPiece(canvas, ctx, name, color) {
         height
     } = file;
 
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Prevents blur
-    ctx.imageSmoothingEnabled = false;
+    $canvas.clearCanvas();
+    $canvas.get(0).getContext("2d").imageSmoothingEnabled = false;
 
     // https://stackoverflow.com/a/45201094/1411473
     // step 1: draw in original image
-    ctx.globalCompositeOperation = "source-over";
-    ctx.drawImage(asset, x, y, width * scale, height * scale);
-
     // step 2: multiply color
-    ctx.globalCompositeOperation = "multiply";
-    ctx.fillStyle = color;
-    ctx.fillRect(x, y, width * scale, height * scale);
+    $canvas.addLayer({
+        type: "image",
+        compositing: "source-over",
+        imageSmoothing: false,
+        source: asset,
+        x: x, y: y,
+        width: width * scale,
+        height: height * scale,
+        fromCenter: false
+      }).addLayer({
+        type: "rectangle",
+        compositing: "multiply",
+        imageSmoothing: false,
+        fillStyle: color,
+        x: x, y: y,
+        width: width * scale,
+        height: height * scale,
+        fromCenter: false
+      });;
 
     // step 4: in our case, we need to clip as we filled the entire area
-    ctx.globalCompositeOperation = "destination-in";
-    ctx.drawImage(asset, x, y, width * scale, height * scale);
-
     // step 5: reset comp mode to default
-    ctx.globalCompositeOperation = "source-over";
-
     let {
         file2,
         x2,
@@ -69,9 +76,28 @@ function _drawPiece(canvas, ctx, name, color) {
         width: width2,
         height: height2
     } = file2;
-    ctx.drawImage(asset2, x2, y2, width2 * scale2, height2 * scale2);
+    $canvas.addLayer({
+        type: "image",
+        compositing: "destination-in",
+        imageSmoothing: false,
+        source: asset,
+        x: x, y: y,
+        width: width * scale,
+        height: height * scale,
+        fromCenter: false
+      }).addLayer({
+        type: "image",
+        compositing: "source-over",
+        imageSmoothing: false,
+        source: asset2,
+        x: x2, y: y2,
+        width: width2 * scale2,
+        height: height2 * scale2,
+        fromCenter: false
+      })
+      .drawLayers();
 
-    document.querySelector("#" + name + "_img").src = canvas.toDataURL("image/png");
-    document.querySelector("#" + name + "_lnk").href = canvas.toDataURL("image/png");
-    document.querySelector("#" + name + "_lnk").download = "Dyed " + name + " " + color + ".png";
+    $(`#${name}_img`).attr('src', $canvas.getCanvasImage('png'));
+    $(`#${name}_lnk`).attr('href', $canvas.getCanvasImage('png'));
+    $(`#${name}_lnk`).attr('download', "Dyed " + name + " " + color + ".png");
 }

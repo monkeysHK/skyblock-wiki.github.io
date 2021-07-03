@@ -3,22 +3,11 @@ import { draw } from './draw.js';
 import { loadColorFromModel } from './color_import.js';
 import { saveToLocalStorage, loadFromLocalStorage } from './local_storage.js';
 
-let canvasH = document.querySelector("#helmet");
-let canvasC = document.querySelector("#chestplate");
-let canvasL = document.querySelector("#leggings");
-let canvasB = document.querySelector("#boots");
-
 export let allCanvas = {
-    h: document.querySelector("#helmet"),
-    c: document.querySelector("#chestplate"),
-    l: document.querySelector("#leggings"),
-    b: document.querySelector("#boots"),
-}
-export let allCTX = {
-    h: canvasH.getContext("2d"),
-    c: canvasC.getContext("2d"),
-    l: canvasL.getContext("2d"),
-    b: canvasB.getContext("2d"),
+    $h: $("#helmet"),
+    $c: $("#chestplate"),
+    $l: $("#leggings"),
+    $b: $("#boots"),
 }
 
 var colorElem, suggestElem;
